@@ -32,7 +32,7 @@ pub fn three_equal(area: Rect) -> [Rect; 3] {
     [chunks[0], chunks[1], chunks[2]]
 }
 
-fn render_header(frame: &mut Frame, title: &str, section: Option<&str>, area: Rect) {
+pub fn render_header(frame: &mut Frame, title: &str, section: Option<&str>, area: Rect) {
     let [left, right] = two_cols(area);
     frame.render_widget(
         Paragraph::new(Line::from(vec![
@@ -62,7 +62,7 @@ fn render_header(frame: &mut Frame, title: &str, section: Option<&str>, area: Re
     );
 }
 
-fn render_footer(frame: &mut Frame, hints: &[(&str, &str)], area: Rect) {
+pub fn render_footer(frame: &mut Frame, hints: &[(&str, &str)], area: Rect) {
     let spans: Vec<Span> = hints
         .iter()
         .flat_map(|(k, d)| {

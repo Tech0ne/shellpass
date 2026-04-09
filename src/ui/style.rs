@@ -24,6 +24,10 @@ pub fn s_dim() -> Style {
     Style::default().fg(DIM)
 }
 
+pub fn s_dim_bg() -> Style {
+    Style::default().fg(BG).bg(DIM).add_modifier(Modifier::BOLD)
+}
+
 pub fn s_panel() -> Style {
     Style::default().bg(BG_PANEL)
 }

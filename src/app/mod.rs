@@ -17,8 +17,6 @@ pub struct App {
     pub password_input: String,
     pub show_input: bool,
 
-    pub confirm_step: bool,
-
     pub selected: usize,
     pub scroll: usize,
     pub command_buf: String,
@@ -48,8 +46,6 @@ impl App {
             vault: None,
             password_input: String::new(),
             show_input: false,
-
-            confirm_step: false,
 
             selected: 0,
             scroll: 0,
