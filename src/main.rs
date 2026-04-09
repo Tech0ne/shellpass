@@ -1,0 +1,79 @@
+mod app;
+mod clipboard;
+mod default_vault_dir_path;
+mod errors;
+mod errors_builder;
+mod events;
+mod ui;
+mod vault;
+
+use clap::Parser;
+use crossterm::{
+    event::{DisableMouseCapture, EnableMouseCapture},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
+use ratatui::{Terminal, prelude::CrosstermBackend};
+use std::{fs, io, path::PathBuf};
+
+use crate::{
+    app::App,
+    default_vault_dir_path::default_vault_dir_path,
+    errors::{Error, Result},
+};
+
+/// vaulterm - tui based password manager
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct CliArgs {
+    /// Directory where vault.enc is stored (default to data dir)
+    #[arg(short, long, value_name = "DIR")]
+    vault_dir: Option<PathBuf>,
+}
+
+fn main() -> Result<()> {
+    let cli = CliArgs::parse();
+
+    let vault_path = cli.vault_dir.unwrap_or(default_vault_dir_path());
+
+    if let Some(dir_path) = vault_path.parent() {
+        fs::create_dir_all(dir_path).map_err(|e| Error::mkdir(e))?;
+    }
+
+    enable_raw_mode().map_err(|e| Error::crossterm(e))?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture).map_err(|e| Error::crossterm(e))?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend).map_err(|e| Error::crossterm(e))?;
+
+    let mut app = App::new(vault_path);
+
+    let result = run_app(&mut terminal, &mut app);
+
+    disable_raw_mode().map_err(|e| Error::crossterm(e))?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )
+    .map_err(|e| Error::crossterm(e))?;
+    terminal.show_cursor().map_err(|e| Error::crossterm(e))?;
+
+    result?;
+
+    Ok(())
+}
+
+fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut App) -> Result<()> {
+    loop {
+        terminal
+            .draw(|f| ui::render(f, app))
+            .map_err(|e| Error::crossterm(e))?;
+        events::handle_events(app)?;
+        app.tick();
+        if app.quit {
+            break;
+        }
+    }
+    Ok(())
+}
