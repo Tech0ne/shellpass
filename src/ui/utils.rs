@@ -1,12 +1,12 @@
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::Modifier,
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
 };
 
-use crate::ui::style::{s_accent, s_bg_accent, s_border, s_dim, s_muted, s_panel, s_text};
+use crate::ui::style::{ACCENT, BG, BG_PANEL, BORDER, DIM, MUTED, TEXT};
 
 pub fn three_rows(area: Rect) -> [Rect; 3] {
     let chunks = Layout::default()
@@ -36,27 +36,33 @@ pub fn render_header(frame: &mut Frame, title: &str, section: Option<&str>, area
     let [left, right] = two_cols(area);
     frame.render_widget(
         Paragraph::new(Line::from(vec![
-            Span::styled("  ◈ VAULTERM  ", s_accent().add_modifier(Modifier::BOLD)),
-            Span::styled("/ ", s_dim()),
-            Span::styled(title.to_string(), s_text().add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "  ◈ SHELLPASS  ",
+                Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("/ ", Style::default().fg(DIM)),
+            Span::styled(
+                title.to_string(),
+                Style::default().fg(TEXT).add_modifier(Modifier::BOLD),
+            ),
         ]))
-        .style(s_panel())
+        .style(Style::default().bg(BG_PANEL))
         .block(
             Block::default()
                 .borders(Borders::BOTTOM)
-                .border_style(s_border()),
+                .border_style(Style::default().fg(BORDER)),
         ),
         left,
     );
     let sec = section.unwrap_or("");
     frame.render_widget(
         Paragraph::new(format!("  {}  ", sec))
-            .style(s_muted())
+            .style(Style::default().fg(MUTED))
             .alignment(Alignment::Right)
             .block(
                 Block::default()
                     .borders(Borders::BOTTOM)
-                    .border_style(s_border()),
+                    .border_style(Style::default().fg(BORDER)),
             ),
         right,
     );
@@ -67,17 +73,25 @@ pub fn render_footer(frame: &mut Frame, hints: &[(&str, &str)], area: Rect) {
         .iter()
         .flat_map(|(k, d)| {
             vec![
-                Span::styled(format!(" {} ", k), s_bg_accent()),
-                Span::styled(format!(" {}  ", d), s_muted()),
+                Span::styled(
+                    format!(" {} ", k),
+                    Style::default()
+                        .fg(BG)
+                        .bg(ACCENT)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(format!(" {}  ", d), Style::default().fg(MUTED)),
             ]
         })
         .collect();
     frame.render_widget(
-        Paragraph::new(Line::from(spans)).style(s_panel()).block(
-            Block::default()
-                .borders(Borders::TOP)
-                .border_style(s_border()),
-        ),
+        Paragraph::new(Line::from(spans))
+            .style(Style::default().bg(BG_PANEL))
+            .block(
+                Block::default()
+                    .borders(Borders::TOP)
+                    .border_style(Style::default().fg(BORDER)),
+            ),
         area,
     );
 }

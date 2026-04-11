@@ -13,9 +13,7 @@ pub fn handle(app: &mut App, key: KeyEvent, profile_index: usize) -> Result<()> 
             app.selected = (app.selected + 1).min(count - 1);
         }
         KeyCode::Char('k') | KeyCode::Up => {
-            app.selected += count;
-            app.selected -= 1;
-            app.selected %= count;
+            app.selected = app.selected.saturating_sub(1);
         }
         KeyCode::Char('g') => {
             app.selected = 0;

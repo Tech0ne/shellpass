@@ -40,13 +40,15 @@ fn main() -> Result<()> {
         fs::create_dir_all(dir_path).map_err(|e| Error::mkdir(e))?;
     }
 
+    let is_new_vault = !vault_path.exists();
+
     enable_raw_mode().map_err(|e| Error::crossterm(e))?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture).map_err(|e| Error::crossterm(e))?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).map_err(|e| Error::crossterm(e))?;
 
-    let mut app = App::new(vault_path);
+    let mut app = App::new(vault_path, is_new_vault);
 
     let result = run_app(&mut terminal, &mut app);
 
@@ -58,6 +60,10 @@ fn main() -> Result<()> {
     )
     .map_err(|e| Error::crossterm(e))?;
     terminal.show_cursor().map_err(|e| Error::crossterm(e))?;
+
+    if let Some(vault) = app.vault {
+        vault.save(&app.vault_path, &app.password_input)?;
+    }
 
     result?;
 

@@ -37,11 +37,11 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(vault_path: PathBuf) -> Self {
+    pub fn new(vault_path: PathBuf, is_new_vault: bool) -> Self {
         Self {
             state: state::State::Unlock,
             mode: vim_mode::Mode::Insert,
-            is_new_vault: vault_path.exists(),
+            is_new_vault,
             vault_path,
             vault: None,
             password_input: String::new(),

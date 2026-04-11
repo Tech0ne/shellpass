@@ -9,13 +9,16 @@ mod style;
 mod unlock;
 mod utils;
 
-use ratatui::{Frame, widgets::Block};
+use ratatui::{Frame, style::Style, widgets::Block};
 
-use crate::app::{App, state::State};
+use crate::{
+    app::{App, state::State},
+    ui::style::BG,
+};
 
 pub fn render(frame: &mut Frame, app: &App) {
     let area = frame.area();
-    frame.render_widget(Block::default().style(style::s_bg()), area);
+    frame.render_widget(Block::default().style(Style::default().bg(BG)), area);
 
     match &app.state {
         State::Unlock => unlock::render(frame, app, area),

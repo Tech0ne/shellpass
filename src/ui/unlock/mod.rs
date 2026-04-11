@@ -1,7 +1,7 @@
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::Modifier,
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Clear, Paragraph},
 };
@@ -9,7 +9,7 @@ use ratatui::{
 use crate::{
     app::App,
     ui::{
-        style::{panel_focused, s_accent, s_bg_accent, s_dim_bg, s_muted, s_panel, s_text},
+        style::{ACCENT, BG, BG_PANEL, DIM, MUTED, TEXT, panel_focused},
         utils::centered_rect,
     },
 };
@@ -26,12 +26,12 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .title(Span::styled(
             format!(" {} ", title),
-            s_accent().add_modifier(Modifier::BOLD),
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
         ))
         .borders(Borders::ALL)
         .border_type(BorderType::Double)
-        .border_style(s_accent())
-        .style(s_panel());
+        .border_style(Style::default().fg(ACCENT))
+        .style(Style::default().bg(BG_PANEL));
     let inner = block.inner(popup);
     frame.render_widget(block, popup);
 
@@ -54,33 +54,45 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     };
     frame.render_widget(
         Paragraph::new(tagline)
-            .style(s_muted())
+            .style(Style::default().fg(MUTED))
             .alignment(Alignment::Center),
         chunks[0],
     );
 
     let stars: String = "●".repeat(app.password_input.len());
     let display = if app.show_input {
-        &app.password_input
+        app.password_input.as_str()
     } else {
-        &stars
+        stars.as_str()
     };
     let label = "Password";
     frame.render_widget(
         Paragraph::new(format!(" {}▌", display))
-            .style(s_text())
+            .style(Style::default().fg(TEXT))
             .block(panel_focused(label)),
         chunks[2],
     );
 
     frame.render_widget(
         Paragraph::new(Line::from(vec![
-            Span::styled(" Enter ", s_bg_accent()),
-            Span::styled("  confirm  ", s_muted()),
-            Span::styled(" Tab ", s_dim_bg()),
-            Span::styled(" show/hide ", s_muted()),
-            Span::styled(" ^C ", s_dim_bg()),
-            Span::styled(" quit ", s_muted()),
+            Span::styled(
+                " Enter ",
+                Style::default()
+                    .fg(BG)
+                    .bg(ACCENT)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("  confirm  ", Style::default().fg(MUTED)),
+            Span::styled(
+                " Tab ",
+                Style::default().fg(BG).bg(DIM).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(" show/hide ", Style::default().fg(MUTED)),
+            Span::styled(
+                " ^C ",
+                Style::default().fg(BG).bg(DIM).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(" quit ", Style::default().fg(MUTED)),
         ]))
         .alignment(Alignment::Center),
         chunks[4],

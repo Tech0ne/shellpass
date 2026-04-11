@@ -1,6 +1,6 @@
 use aes_gcm::{
     AeadCore, Aes256Gcm, Key, KeyInit, Nonce,
-    aead::{Aead, OsRng},
+    aead::{Aead, OsRng, Payload},
 };
 use argon2::password_hash::SaltString;
 use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
@@ -23,14 +23,19 @@ pub struct EncryptedVault {
 
 impl EncryptedVault {
     pub fn from_vault_data(data: &VaultData, password: &str) -> Result<Self> {
-        let json = serde_json::to_string(data)?;
+        let mut buf = Vec::new();
+        ciborium::into_writer(&data, &mut buf)?;
         let salt = SaltString::generate(&mut OsRng);
         let salt_str = salt.as_str().to_string();
         let key_bytes = derive_key(password, &salt_str)?;
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
         let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
-        let ciphertext = cipher.encrypt(&nonce, json.as_bytes())?;
+        let payload = Payload {
+            msg: &buf,
+            aad: b"",
+        };
+        let ciphertext = cipher.encrypt(&nonce, payload)?;
         Ok(Self {
             version: VERSION,
             salt: salt_str,
@@ -47,6 +52,6 @@ impl EncryptedVault {
         let nonce = Nonce::from_slice(&nonce_bytes);
         let ciphertext = BASE64.decode(&self.ciphertext)?;
         let plaintext = cipher.decrypt(nonce, ciphertext.as_slice())?;
-        Ok(serde_json::from_slice(&plaintext)?)
+        Ok(ciborium::from_reader(plaintext.as_slice())?)
     }
 }

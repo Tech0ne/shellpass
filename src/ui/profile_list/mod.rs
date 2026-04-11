@@ -1,7 +1,7 @@
 use ratatui::{
     Frame,
     layout::Rect,
-    style::Modifier,
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{List, ListItem, ListState},
 };
@@ -9,14 +9,14 @@ use ratatui::{
 use crate::{
     app::App,
     ui::{
-        style::{panel, s_accent, s_muted, s_sel, s_text},
+        style::{ACCENT, BG_SEL, MUTED, TEXT, panel},
         utils::{render_footer, render_header, three_rows},
     },
 };
 
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let [header, body, footer] = three_rows(area);
-    render_header(frame, "Profiles", None, area);
+    render_header(frame, "Profiles", None, header);
 
     let vault = match &app.vault {
         Some(v) => v,
@@ -34,9 +34,12 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 n => format!("{} entries", n),
             };
             ListItem::new(Line::from(vec![
-                Span::styled("  ⊞  ", s_accent()),
-                Span::styled(p.name.clone(), s_text().add_modifier(Modifier::BOLD)),
-                Span::styled(format!("  ·  {}", sub), s_muted()),
+                Span::styled("  ⊞  ", Style::default().fg(ACCENT)),
+                Span::styled(
+                    p.name.clone(),
+                    Style::default().fg(TEXT).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(format!("  ·  {}", sub), Style::default().fg(MUTED)),
             ]))
         })
         .collect();
@@ -49,7 +52,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_stateful_widget(
         List::new(items)
             .block(panel("Profiles"))
-            .highlight_style(s_sel())
+            .highlight_style(Style::default().bg(BG_SEL))
             .highlight_symbol("▶ "),
         body,
         &mut state,

@@ -25,12 +25,12 @@ pub fn handle(app: &mut App, key: KeyEvent) -> Result<()> {
 
     match key.code {
         KeyCode::Char('j') | KeyCode::Down => {
-            app.selected = (app.selected + 1).min(count - 1);
+            if count > 0 {
+                app.selected = (app.selected + 1).min(count - 1);
+            }
         }
         KeyCode::Char('k') | KeyCode::Up => {
-            app.selected += count;
-            app.selected -= 1;
-            app.selected %= count;
+            app.selected = app.selected.saturating_sub(1);
         }
         KeyCode::Char('g') => {
             app.selected = 0;
@@ -39,12 +39,14 @@ pub fn handle(app: &mut App, key: KeyEvent) -> Result<()> {
             app.selected = count - 1;
         }
         KeyCode::Enter | KeyCode::Char('l') | KeyCode::Right => {
-            let index = app.selected;
-            app.state = State::EntryList {
-                profile_index: index,
-            };
-            app.selected = 0;
-            app.scroll = 0;
+            if count > 0 {
+                let index = app.selected;
+                app.state = State::EntryList {
+                    profile_index: index,
+                };
+                app.selected = 0;
+                app.scroll = 0;
+            }
         }
         KeyCode::Char('n') => {
             app.profile_name_input.clear();
