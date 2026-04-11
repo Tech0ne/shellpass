@@ -1,4 +1,5 @@
 mod app;
+mod cli_args;
 mod clipboard;
 mod default_vault_dir_path;
 mod errors;
@@ -6,6 +7,7 @@ mod errors_builder;
 mod events;
 mod ui;
 mod vault;
+mod vim_motions;
 
 use clap::Parser;
 use crossterm::{
@@ -14,7 +16,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, prelude::CrosstermBackend};
-use std::{fs, io, path::PathBuf};
+use std::{fs, io};
 
 use crate::{
     app::App,
@@ -22,17 +24,8 @@ use crate::{
     errors::{Error, Result},
 };
 
-/// vaulterm - tui based password manager
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct CliArgs {
-    /// Directory where vault.enc is stored (default to data dir)
-    #[arg(short, long, value_name = "DIR")]
-    vault_dir: Option<PathBuf>,
-}
-
 fn main() -> Result<()> {
-    let cli = CliArgs::parse();
+    let cli = cli_args::CliArgs::parse();
 
     let vault_path = cli.vault_dir.unwrap_or(default_vault_dir_path());
 
