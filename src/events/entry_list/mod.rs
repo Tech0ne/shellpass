@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::{
     app::{App, entry::Entry, state::State},
@@ -26,11 +26,21 @@ pub fn handle(app: &mut App, key: KeyEvent, profile_index: usize) -> Result<()> 
             app.selected = profile_index;
         }
         KeyCode::Enter | KeyCode::Char('l') | KeyCode::Right => {
-            app.state = State::EntryDetail {
-                profile_index,
-                entry_index: app.selected,
-            };
-            app.detail_selected = 0;
+            if count > 0 {
+                let form = app
+                    .vault
+                    .as_ref()
+                    .and_then(|v| v.profiles.get(profile_index))
+                    .and_then(|p| p.entries.get(app.selected))
+                    .map(|e| Entry::from(e));
+                if let Some(f) = form {
+                    app.entry_form = Some(f);
+                    app.state = State::EntryDetail {
+                        profile_index,
+                        entry_index: app.selected,
+                    };
+                }
+            }
         }
         KeyCode::Char('n') => {
             app.entry_form = Some(Entry::new());
@@ -64,6 +74,13 @@ pub fn handle(app: &mut App, key: KeyEvent, profile_index: usize) -> Result<()> 
                     }
                     app.ntfy_info("Entry deleted");
                 }
+            }
+        }
+        KeyCode::Char('x') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(vault) = &app.vault {
+                vault.save(&app.vault_path, &app.vault_pass)?;
+                app.dirty = false;
+                app.quit = true;
             }
         }
         _ => {}

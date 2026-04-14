@@ -1,4 +1,5 @@
 alias b := build
+alias bw := build-windows
 alias c := clean
 alias d := dev
 alias db := debug
@@ -6,7 +7,7 @@ alias fc := fclean
 alias r := run
 alias t := test
 
-binary_name := if os() == "windows" { "shellsafe.exe" } else { "shellsafe" }
+binary_name := "shellpass"
 
 [doc("Choose one available receipes")]
 default:
@@ -17,7 +18,15 @@ default:
 [group("run")]
 build mode="debug":
     cargo build {{ if mode == "release" { "--release" } else { "" } }}
-    cp target/{{ mode }}/{{ binary_name }} {{ binary_name }}
+    cp target/{{ mode }}/{{ binary_name }}{{ if os() == "windows" { ".exe" } else { "" } }} {{ binary_name }}{{ if os() == "windows" { ".exe" } else { "" } }}
+
+[arg("mode", long="release", short="r", value="release", help="set cargo build mode to release")]
+[doc("Configure and build the project for windows")]
+[group("run")]
+[linux]
+build-windows mode="debug":
+    cargo build --target x86_64-pc-windows-gnu {{ if mode == "release" { "--release" } else { "" } }}
+    cp target/x86_64-pc-windows-gnu/{{ mode }}/{{ binary_name }}.exe {{ binary_name }}.exe
 
 [doc("Build and run the project")]
 [group("run")]
@@ -33,6 +42,8 @@ clean:
 [group("clean")]
 fclean: clean
     rm -f ./{{ binary_name }}
+    rm -f ./{{ binary_name }}.exe
+    rm -f ./.vault
 
 [doc("Run the software in debug mode, with local vault")]
 [group("dev")]

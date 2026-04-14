@@ -1,24 +1,9 @@
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::{
     app::{App, state::State},
     errors::Result,
 };
-
-fn take_count(app: &mut App) -> usize {
-    let n: usize = app.count_buf.parse().unwrap_or(1).max(1);
-    app.count_buf.clear();
-    n
-}
-
-fn feed_digit(app: &mut App, c: char) -> bool {
-    if c.is_ascii_digit() {
-        app.count_buf.push(c);
-        true
-    } else {
-        false
-    }
-}
 
 pub fn handle(app: &mut App, key: KeyEvent) -> Result<()> {
     let count = app.current_profile_count();
@@ -54,7 +39,7 @@ pub fn handle(app: &mut App, key: KeyEvent) -> Result<()> {
                 profile_index: None,
             };
         }
-        KeyCode::Char('r') | KeyCode::Char('e') => {
+        KeyCode::Char('r') => {
             let name = app
                 .vault
                 .as_ref()
@@ -76,6 +61,20 @@ pub fn handle(app: &mut App, key: KeyEvent) -> Result<()> {
                     app.selected -= 1;
                 }
                 app.ntfy_info("Profile deleted");
+            }
+        }
+        KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(vault) = &app.vault {
+                vault.save(&app.vault_path, &app.vault_pass)?;
+                app.ntfy_info("Saved vault successfully");
+                app.dirty = false;
+            }
+        }
+        KeyCode::Char('x') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(vault) = &app.vault {
+                vault.save(&app.vault_path, &app.vault_pass)?;
+                app.dirty = false;
+                app.quit = true;
             }
         }
         _ => {}

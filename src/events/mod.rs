@@ -1,3 +1,10 @@
+mod edit_entry;
+mod edit_profile;
+mod entry_detail;
+mod entry_list;
+mod profile_list;
+mod unlock;
+
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
@@ -6,13 +13,6 @@ use crate::{
     app::{App, state::State},
     errors::{Error, Result},
 };
-
-mod edit_entry;
-mod edit_profile;
-mod entry_detail;
-mod entry_list;
-mod profile_list;
-mod unlock;
 
 pub fn handle_events(app: &mut App) -> Result<()> {
     if event::poll(Duration::from_millis(50)).map_err(|e| Error::crossterm(e))? {

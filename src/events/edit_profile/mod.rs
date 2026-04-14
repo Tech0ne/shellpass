@@ -1,6 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent};
 
-use crate::{app::{App, state::State}, errors::Result, vault::vault_data::profile::Profile};
+use crate::{
+    app::{App, state::State},
+    errors::Result,
+    vault::vault_data::profile::Profile,
+};
 
 pub fn handle(app: &mut App, key: KeyEvent, profile_index: Option<usize>) -> Result<()> {
     match key.code {
@@ -11,6 +15,10 @@ pub fn handle(app: &mut App, key: KeyEvent, profile_index: Option<usize>) -> Res
                 return Ok(());
             }
             if let Some(vault) = &mut app.vault {
+                if vault.profiles.iter().any(|p| p.name == name) {
+                    app.ntfy_error(format!("A profile named \"{name}\" already exists !"));
+                    return Ok(());
+                }
                 if let Some(index) = profile_index {
                     if let Some(p) = vault.profiles.get_mut(index) {
                         p.name = name;

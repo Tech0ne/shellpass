@@ -66,6 +66,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize) {
             ("d", "del"),
             ("↵", "view"),
             ("h/Esc", "back"),
+            ("<Ctrl-c>", "quit"),
+            ("<Ctrl-x>", "save and quit"),
             // (":w", "save"),
         ],
         footer,

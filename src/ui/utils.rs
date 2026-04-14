@@ -9,12 +9,13 @@ use ratatui::{
 use crate::ui::style::{ACCENT, BG, BG_PANEL, BORDER, DIM, MUTED, TEXT};
 
 pub fn three_rows(area: Rect) -> [Rect; 3] {
+    let (body_min, footer_len) = if area.height >= 8 { (0, 3) } else { (0, 0) };
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),
-            Constraint::Min(0),
-            Constraint::Length(3),
+            Constraint::Min(body_min),
+            Constraint::Length(footer_len),
         ])
         .split(area);
     [chunks[0], chunks[1], chunks[2]]

@@ -43,7 +43,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(block, popup);
 
     let [row0, row1, _] = three_equal(inner);
-    let secs = timer.remaining_frac();
+    let secs = timer.remaining_secs();
     frame.render_widget(
         Paragraph::new(format!("  Clears in {}s", secs)).style(Style::default().fg(MUTED)),
         row0,

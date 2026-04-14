@@ -1,6 +1,3 @@
-mod field;
-
-use field::Field;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -10,7 +7,7 @@ pub struct Entry {
     pub username: String,
     pub password: String,
     pub website: String,
-    pub custom_fields: Vec<Field>,
+    pub raw_data: String,
 }
 
 impl Entry {
@@ -20,7 +17,19 @@ impl Entry {
             username: String::new(),
             password: String::new(),
             website: String::new(),
-            custom_fields: Vec::new(),
+            raw_data: String::new(),
+        }
+    }
+}
+
+impl From<crate::app::entry::Entry> for Entry {
+    fn from(value: crate::app::entry::Entry) -> Self {
+        Self {
+            id: Uuid::now_v7(),
+            username: value.username,
+            password: value.password,
+            website: value.website,
+            raw_data: value.raw_data,
         }
     }
 }

@@ -1,12 +1,12 @@
 use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{
-    app::{App, clip_timer::ClipTimer, state::State},
+    app::{App, clip_timer::ClipTimer, edit_mode::Mode, entry::FocusedField, state::State},
     clipboard::copy_to_clipboard,
     errors::Result,
 };
 
-fn copy_field(app: &mut App, profile_index: usize, entry_index: usize, field: usize) {
+fn copy_field(app: &mut App, profile_index: usize, entry_index: usize, field: FocusedField) {
     let entry = match app
         .vault
         .as_ref()
@@ -18,13 +18,10 @@ fn copy_field(app: &mut App, profile_index: usize, entry_index: usize, field: us
     };
 
     let (value, label) = match field {
-        0 => (entry.username.clone(), "Username"),
-        1 => (entry.password.clone(), "Password"),
-        2 => (entry.website.clone(), "Website"),
-        n => match entry.custom_fields.get(n - 3) {
-            Some(f) => (f.val.clone(), f.key.as_str()),
-            None => return,
-        },
+        FocusedField::Username => (entry.username.clone(), "Username"),
+        FocusedField::Password => (entry.password.clone(), "Password"),
+        FocusedField::Website => (entry.website.clone(), "Website"),
+        FocusedField::RawData => (entry.raw_data.clone(), "Custom Data"),
     };
 
     if value.is_empty() {
@@ -32,22 +29,15 @@ fn copy_field(app: &mut App, profile_index: usize, entry_index: usize, field: us
         return;
     }
 
-    match arboard::Clipboard::new() {
-        Ok(mut clipboard) => {
-            if let Ok(_) = copy_to_clipboard(&mut clipboard, &value) {
-                if field == 1 {
-                    app.clip_timer = Some(ClipTimer::new(label));
-                    app.ntfy_info("Password copied - clears in 10s");
-                } else {
-                    app.ntfy_info(format!("{} copied to clipboard", label));
-                }
-            } else {
-                app.ntfy_error("Failed to write to clipboad");
-            }
+    if let Ok(_) = copy_to_clipboard(&mut app.clipboard, &value) {
+        if field == FocusedField::Password {
+            app.clip_timer = Some(ClipTimer::new(label));
+            app.ntfy_info("Password copied - clears in 10s");
+        } else {
+            app.ntfy_info(format!("{} copied to clipboard", label));
         }
-        Err(_) => {
-            app.ntfy_error("Clipboard unavailable");
-        }
+    } else {
+        app.ntfy_error("Failed to write to clipboad");
     }
 }
 
@@ -57,33 +47,63 @@ pub fn handle(
     profile_index: usize,
     entry_index: usize,
 ) -> Result<()> {
-    let field_count = app
-        .vault
-        .as_ref()
-        .and_then(|v| v.profiles.get(profile_index))
-        .and_then(|p| p.entries.get(entry_index))
-        .map(|e| 3 + e.custom_fields.len())
-        .unwrap_or(3);
-
     match key.code {
         KeyCode::Char('j') | KeyCode::Down => {
-            app.selected = (app.selected + 1).min(field_count - 1);
+            if let Some(f) = &mut app.entry_form {
+                f.focused_field = match f.focused_field {
+                    FocusedField::Username => FocusedField::Password,
+                    FocusedField::Password => FocusedField::Website,
+                    FocusedField::Website => FocusedField::RawData,
+                    FocusedField::RawData => FocusedField::RawData,
+                }
+            }
         }
         KeyCode::Char('k') | KeyCode::Up => {
-            app.selected += field_count;
-            app.selected -= 1;
-            app.selected %= field_count;
+            if let Some(f) = &mut app.entry_form {
+                f.focused_field = match f.focused_field {
+                    FocusedField::Username => FocusedField::Username,
+                    FocusedField::Password => FocusedField::Username,
+                    FocusedField::Website => FocusedField::Password,
+                    FocusedField::RawData => FocusedField::Website,
+                }
+            }
         }
         KeyCode::Char('g') => {
-            app.selected = 0;
+            if let Some(f) = &mut app.entry_form {
+                f.focused_field = FocusedField::Username;
+            }
         }
         KeyCode::Char('G') => {
-            app.selected = field_count - 1;
+            if let Some(f) = &mut app.entry_form {
+                f.focused_field = FocusedField::RawData;
+            }
+        }
+        KeyCode::Char('i')
+        | KeyCode::Char('I')
+        | KeyCode::Char('o')
+        | KeyCode::Char('O')
+        | KeyCode::Char('a')
+        | KeyCode::Char('A')
+        | KeyCode::Char('e')
+        | KeyCode::Char('E')
+        | KeyCode::Char('r')
+        | KeyCode::Char('R') => {
+            app.mode = Mode::Insert;
+            app.state = State::EditEntry {
+                profile_index,
+                entry_index: Some(entry_index),
+            };
         }
         KeyCode::Esc | KeyCode::Char('h') | KeyCode::Left => {
+            app.entry_form = None;
+            app.selected = entry_index;
             app.state = State::EntryList { profile_index };
         }
-        KeyCode::Enter => {}
+        KeyCode::Enter => {
+            if let Some(f) = &app.entry_form {
+                copy_field(app, profile_index, entry_index, f.focused_field);
+            }
+        }
         _ => {}
     }
 

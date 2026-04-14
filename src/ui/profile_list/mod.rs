@@ -65,8 +65,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("r", "rename"),
             ("d", "del"),
             ("↵", "open"),
-            (":w", "save"),
-            (":q", "quit"),
+            ("<Ctrl-s>", "save"),
+            ("<Ctrl-c>", "quit"),
+            ("<Ctrl-x>", "save and quit"),
         ],
         footer,
     );

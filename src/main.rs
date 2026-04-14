@@ -7,7 +7,6 @@ mod errors_builder;
 mod events;
 mod ui;
 mod vault;
-mod vim_motions;
 
 use clap::Parser;
 use crossterm::{
@@ -37,11 +36,11 @@ fn main() -> Result<()> {
 
     enable_raw_mode().map_err(|e| Error::crossterm(e))?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture).map_err(|e| Error::crossterm(e))?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture,).map_err(|e| Error::crossterm(e))?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).map_err(|e| Error::crossterm(e))?;
 
-    let mut app = App::new(vault_path, is_new_vault);
+    let mut app = App::new(vault_path, is_new_vault)?;
 
     let result = run_app(&mut terminal, &mut app);
 
@@ -49,13 +48,13 @@ fn main() -> Result<()> {
     execute!(
         terminal.backend_mut(),
         LeaveAlternateScreen,
-        DisableMouseCapture
+        DisableMouseCapture,
     )
     .map_err(|e| Error::crossterm(e))?;
     terminal.show_cursor().map_err(|e| Error::crossterm(e))?;
 
     if let Some(vault) = app.vault {
-        vault.save(&app.vault_path, &app.password_input)?;
+        vault.save(&app.vault_path, &app.vault_pass)?;
     }
 
     result?;
@@ -71,7 +70,12 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut App)
         events::handle_events(app)?;
         app.tick();
         if app.quit {
-            break;
+            if app.dirty {
+                app.ntfy_error("Please save before quiting !");
+                app.quit = false;
+            } else {
+                break;
+            }
         }
     }
     Ok(())

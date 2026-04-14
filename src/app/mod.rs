@@ -1,25 +1,27 @@
 pub mod clip_timer;
+pub mod edit_mode;
 pub mod entry;
 mod notification;
 pub mod state;
-pub mod vim_mode;
 
-use crate::vault::vault_data::VaultData;
+use crate::{errors::Result, vault::vault_data::VaultData};
+use arboard::Clipboard;
 use state::State;
 use std::path::PathBuf;
 
 pub struct App {
     pub state: state::State,
-    pub mode: vim_mode::Mode,
+    pub mode: edit_mode::Mode,
     pub is_new_vault: bool,
     pub vault_path: PathBuf,
+    pub vault_pass: String,
     pub vault: Option<VaultData>,
-    pub password_input: String,
     pub show_input: bool,
+
+    pub clipboard: Clipboard,
 
     pub selected: usize,
     pub scroll: usize,
-    pub command_buf: String,
 
     pub clip_timer: Option<clip_timer::ClipTimer>,
     pub notification: Option<notification::Notification>,
@@ -27,29 +29,25 @@ pub struct App {
     pub entry_form: Option<entry::Entry>,
     pub profile_name_input: String,
 
-    pub detail_selected: usize,
     pub quit: bool,
     pub dirty: bool,
-
-    // ? need a rework on the vim keybinds
-    pub count_buf: String,
-    pub pending_z: bool,
 }
 
 impl App {
-    pub fn new(vault_path: PathBuf, is_new_vault: bool) -> Self {
-        Self {
+    pub fn new(vault_path: PathBuf, is_new_vault: bool) -> Result<Self> {
+        Ok(Self {
             state: state::State::Unlock,
-            mode: vim_mode::Mode::Insert,
+            mode: edit_mode::Mode::Insert,
             is_new_vault,
             vault_path,
+            vault_pass: String::new(),
             vault: None,
-            password_input: String::new(),
             show_input: false,
+
+            clipboard: Clipboard::new()?,
 
             selected: 0,
             scroll: 0,
-            command_buf: String::new(),
 
             clip_timer: None,
             notification: None,
@@ -57,13 +55,9 @@ impl App {
             entry_form: None,
             profile_name_input: String::new(),
 
-            detail_selected: 0,
             quit: false,
             dirty: false,
-
-            count_buf: String::new(),
-            pending_z: false,
-        }
+        })
     }
 
     pub fn ntfy_info(&mut self, msg: impl Into<String>) {
@@ -71,7 +65,7 @@ impl App {
     }
 
     pub fn ntfy_error(&mut self, msg: impl Into<String>) {
-        self.notification = Some(notification::Notification::info(msg));
+        self.notification = Some(notification::Notification::error(msg));
     }
 
     pub fn current_profile_count(&self) -> usize {
@@ -101,15 +95,13 @@ impl App {
 
         if let Some(t) = &self.clip_timer {
             if t.expired() {
-                if let Ok(mut clipboard) = arboard::Clipboard::new() {
-                    if let Err(e) = crate::clipboard::clear_clipboard(&mut clipboard) {
-                        self.ntfy_error(format!("Error clearing clipboard: {}", e));
-                    } else {
-                        self.ntfy_info("Clipboard cleared");
-                    }
-
-                    self.clip_timer = None;
+                if let Err(e) = crate::clipboard::clear_clipboard(&mut self.clipboard) {
+                    self.ntfy_error(format!("Error clearing clipboard: {}", e));
+                } else {
+                    self.ntfy_info("Clipboard cleared");
                 }
+
+                self.clip_timer = None;
             }
         }
     }
