@@ -54,5 +54,5 @@ This project uses [just](https://github.com/casey/just) for building. You can us
 - [ ] Improve codebase / reworks
 - [ ] Add more customisability, through config file/cli args
 - [ ] Add (more) vim-like controls (:w, :q...)
-- [ ] Add github actions Ci/Cd for automatic releases
+- [x] Add github actions Ci/Cd for automatic releases
 - [ ] Add mouse support
