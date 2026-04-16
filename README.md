@@ -55,4 +55,4 @@ This project uses [just](https://github.com/casey/just) for building. You can us
 - [ ] Add more customisability, through config file/cli args
 - [ ] Add (more) vim-like controls (:w, :q...)
 - [x] Add github actions Ci/Cd for automatic releases
-- [ ] Add mouse support
+- [x] Add mouse support
