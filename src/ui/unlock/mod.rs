@@ -14,7 +14,9 @@ use crate::{
     },
 };
 
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
+    app.layout = Default::default();
+
     let h = area.height;
 
     if h < 3 {

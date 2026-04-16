@@ -69,22 +69,37 @@ pub fn render_header(frame: &mut Frame, title: &str, section: Option<&str>, area
     );
 }
 
-pub fn render_footer(frame: &mut Frame, hints: &[(&str, &str)], area: Rect) {
+pub fn render_footer(frame: &mut Frame, hints: &[(&str, &str)], area: Rect) -> Vec<Rect> {
+    let mut badge_rects: Vec<Rect> = Vec::new();
+    let mut x = area.x;
+    let text_y = area.y + 1;
+
     let spans: Vec<Span> = hints
         .iter()
         .flat_map(|(k, d)| {
+            let badge = format!(" {} ", k);
+            let desc = format!(" {}  ", d);
+            let badge_w = badge.chars().count() as u16;
+            let desc_w = desc.chars().count() as u16;
+
+            if text_y < area.y + area.height {
+                badge_rects.push(Rect::new(x, text_y, badge_w, 1));
+            }
+            x += badge_w + desc_w;
+
             vec![
                 Span::styled(
-                    format!(" {} ", k),
+                    badge,
                     Style::default()
                         .fg(BG)
                         .bg(ACCENT)
                         .add_modifier(Modifier::BOLD),
                 ),
-                Span::styled(format!(" {}  ", d), Style::default().fg(MUTED)),
+                Span::styled(desc, Style::default().fg(MUTED)),
             ]
         })
         .collect();
+
     frame.render_widget(
         Paragraph::new(Line::from(spans))
             .style(Style::default().bg(BG_PANEL))
@@ -95,6 +110,8 @@ pub fn render_footer(frame: &mut Frame, hints: &[(&str, &str)], area: Rect) {
             ),
         area,
     );
+
+    badge_rects
 }
 
 fn two_cols(area: Rect) -> [Rect; 2] {
@@ -122,4 +139,23 @@ pub fn centered_rect(pw: u16, ph: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - pw) / 2),
         ])
         .split(vert[1])[1]
+}
+
+pub fn clicked_list_row(mouse_col: u16, mouse_row: u16, body: Rect) -> Option<usize> {
+    if mouse_col < body.x || mouse_col >= body.x + body.width {
+        return None;
+    }
+    let inner_y = body.y + 1;
+    let inner_h = body.height.saturating_sub(2);
+    if mouse_row < inner_y || mouse_row >= inner_y + inner_h {
+        return None;
+    }
+    Some((mouse_row - inner_y) as usize)
+}
+
+pub fn clicked_hint(mouse_col: u16, mouse_row: u16, hint_rects: &[Rect]) -> Option<usize> {
+    hint_rects.iter().position(|r| {
+        mouse_col >= r.x && mouse_col < r.x + r.width
+            && mouse_row >= r.y && mouse_row < r.y + r.height
+    })
 }

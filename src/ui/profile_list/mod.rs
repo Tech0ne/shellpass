@@ -14,9 +14,12 @@ use crate::{
     },
 };
 
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     let [header, body, footer] = three_rows(area);
     render_header(frame, "Profiles", None, header);
+
+    app.layout.list_body = body;
+    app.layout.footer = footer;
 
     let vault = match &app.vault {
         Some(v) => v,
@@ -58,7 +61,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         &mut state,
     );
 
-    render_footer(
+    app.layout.footer_hints = render_footer(
         frame,
         &[
             ("n", "new"),

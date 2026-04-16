@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize) {
+pub fn render(frame: &mut Frame, app: &mut App, area: Rect, profile_index: usize) {
     let profile = app
         .vault
         .as_ref()
@@ -23,6 +23,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize) {
 
     let [header, body, footer] = three_rows(area);
     render_header(frame, pname, Some("Entries"), header);
+
+    app.layout.list_body = body;
+    app.layout.footer = footer;
 
     let entries = profile.map(|p| p.entries.as_slice()).unwrap_or(&[]);
     let items: Vec<ListItem> = entries
@@ -58,7 +61,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize) {
         &mut state,
     );
 
-    render_footer(
+    app.layout.footer_hints = render_footer(
         frame,
         &[
             ("n", "new"),

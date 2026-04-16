@@ -1,13 +1,16 @@
 pub mod clip_timer;
 pub mod edit_mode;
 pub mod entry;
+mod layout;
 mod notification;
 pub mod state;
 
 use crate::{errors::Result, vault::vault_data::VaultData};
 use arboard::Clipboard;
 use state::State;
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Instant};
+
+const DOUBLE_CLICK_TIMING: u128 = 500;
 
 pub struct App {
     pub state: state::State,
@@ -18,7 +21,7 @@ pub struct App {
     pub vault: Option<VaultData>,
     pub show_input: bool,
 
-    pub clipboard: Clipboard,
+    pub clipboard: Option<Clipboard>,
 
     pub selected: usize,
     pub scroll: usize,
@@ -28,6 +31,9 @@ pub struct App {
 
     pub entry_form: Option<entry::Entry>,
     pub profile_name_input: String,
+
+    pub layout: layout::LayoutCache,
+    pub last_click: Option<(u16, u16, Instant)>,
 
     pub quit: bool,
     pub dirty: bool,
@@ -44,7 +50,7 @@ impl App {
             vault: None,
             show_input: false,
 
-            clipboard: Clipboard::new()?,
+            clipboard: Clipboard::new().ok(),
 
             selected: 0,
             scroll: 0,
@@ -54,6 +60,9 @@ impl App {
 
             entry_form: None,
             profile_name_input: String::new(),
+
+            layout: layout::LayoutCache::default(),
+            last_click: None,
 
             quit: false,
             dirty: false,
@@ -95,14 +104,29 @@ impl App {
 
         if let Some(t) = &self.clip_timer {
             if t.expired() {
-                if let Err(e) = crate::clipboard::clear_clipboard(&mut self.clipboard) {
-                    self.ntfy_error(format!("Error clearing clipboard: {}", e));
-                } else {
-                    self.ntfy_info("Clipboard cleared");
+                if let Some(clipboard) = &mut self.clipboard {
+                    if let Err(e) = crate::clipboard::clear_clipboard(clipboard) {
+                        self.ntfy_error(format!("Error clearing clipboard: {}", e));
+                    } else {
+                        self.ntfy_info("Clipboard cleared");
+                    }
                 }
 
                 self.clip_timer = None;
             }
         }
+    }
+
+    pub fn is_double_click(&mut self, col: u16, row: u16) -> bool {
+        let now = Instant::now();
+        let is_double = self
+            .last_click
+            .as_ref()
+            .map(|(lc, lr, lt)| {
+                *lc == col && *lr == row && lt.elapsed().as_millis() < DOUBLE_CLICK_TIMING
+            })
+            .unwrap_or(false);
+        self.last_click = Some((col, row, now));
+        is_double
     }
 }

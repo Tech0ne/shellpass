@@ -16,7 +16,7 @@ use crate::{
 
 pub fn render(
     frame: &mut Frame,
-    app: &App,
+    app: &mut App,
     area: Rect,
     _profile_index: usize,
     entry_index: Option<usize>,
@@ -32,6 +32,9 @@ pub fn render(
     };
 
     let [header, body, footer] = three_rows(area);
+
+    app.layout.list_body = body;
+    app.layout.footer = footer;
 
     let mode_span = match app.mode {
         Mode::Insert => Span::styled(
@@ -125,6 +128,8 @@ pub fn render(
         [c[0], c[1]]
     };
 
+    app.layout.raw_area = raw_area;
+
     frame.render_widget(List::new(rows).block(panel(title)), list_area);
 
     // Raw data: multi-line paragraph with cursor appended at end when focused+insert
@@ -177,5 +182,5 @@ pub fn render(
             ("<Ctrl-c>", "quit"),
         ]
     };
-    render_footer(frame, &hints, footer);
+    app.layout.footer_hints = render_footer(frame, &hints, footer);
 }

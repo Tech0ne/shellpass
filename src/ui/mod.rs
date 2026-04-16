@@ -7,7 +7,7 @@ mod notification;
 mod profile_list;
 mod style;
 mod unlock;
-mod utils;
+pub mod utils;
 
 use ratatui::{Frame, style::Style, widgets::Block};
 
@@ -16,7 +16,7 @@ use crate::{
     ui::style::BG,
 };
 
-pub fn render(frame: &mut Frame, app: &App) {
+pub fn render(frame: &mut Frame, app: &mut App) {
     let area = frame.area();
     frame.render_widget(Block::default().style(Style::default().bg(BG)), area);
 

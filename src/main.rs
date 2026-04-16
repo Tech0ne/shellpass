@@ -10,7 +10,7 @@ mod vault;
 
 use clap::Parser;
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture},
+    event::{self, DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
@@ -23,7 +23,16 @@ use crate::{
     errors::{Error, Result},
 };
 
-fn main() -> Result<()> {
+fn main() -> std::io::Result<()> {
+    if let Err(e) = run() {
+        eprintln!("[FATAL ERROR]: {}", e);
+        std::process::exit(1);
+    }
+
+    Ok(())
+}
+
+fn run() -> Result<()> {
     let cli = cli_args::CliArgs::parse();
 
     let vault_path = cli.vault_dir.unwrap_or(default_vault_dir_path());
@@ -34,24 +43,28 @@ fn main() -> Result<()> {
 
     let is_new_vault = !vault_path.exists();
 
+    let mut app = App::new(vault_path, is_new_vault)?;
+
     enable_raw_mode().map_err(|e| Error::crossterm(e))?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture,).map_err(|e| Error::crossterm(e))?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).map_err(|e| Error::crossterm(e))?;
 
-    let mut app = App::new(vault_path, is_new_vault)?;
-
     let result = run_app(&mut terminal, &mut app);
 
-    disable_raw_mode().map_err(|e| Error::crossterm(e))?;
+    while event::poll(std::time::Duration::from_millis(0)).unwrap_or(false) {
+        let _ = event::read();
+    }
+
     execute!(
         terminal.backend_mut(),
-        LeaveAlternateScreen,
         DisableMouseCapture,
+        LeaveAlternateScreen,
     )
     .map_err(|e| Error::crossterm(e))?;
     terminal.show_cursor().map_err(|e| Error::crossterm(e))?;
+    disable_raw_mode().map_err(|e| Error::crossterm(e))?;
 
     if let Some(vault) = app.vault {
         vault.save(&app.vault_path, &app.vault_pass)?;

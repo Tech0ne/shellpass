@@ -14,7 +14,9 @@ use crate::{
     },
 };
 
-pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: Option<usize>) {
+pub fn render(frame: &mut Frame, app: &mut App, area: Rect, profile_index: Option<usize>) {
+    app.layout = Default::default();
+
     let title = if profile_index.is_some() {
         "Rename Profile"
     } else {

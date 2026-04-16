@@ -14,7 +14,13 @@ use crate::{
     },
 };
 
-pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize, entry_index: usize) {
+pub fn render(
+    frame: &mut Frame,
+    app: &mut App,
+    area: Rect,
+    profile_index: usize,
+    entry_index: usize,
+) {
     let entry = match app
         .vault
         .as_ref()
@@ -27,6 +33,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize, en
 
     let [header, body, footer] = three_rows(area);
     render_header(frame, &entry.username, Some("Details"), header);
+
+    app.layout.list_body = body;
+    app.layout.footer = footer;
 
     // Split body: top 3 fields as list, raw data below
     let focused_field = app.entry_form.as_ref().map(|f| f.focused_field);
@@ -94,6 +103,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize, en
         })
         .collect();
 
+    app.layout.raw_area = raw_area;
+
     frame.render_widget(List::new(items).block(panel("Details")), list_area);
 
     // Raw data as a multi-line paragraph
@@ -134,7 +145,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect, profile_index: usize, en
         raw_area,
     );
 
-    render_footer(
+    app.layout.footer_hints = render_footer(
         frame,
         &[
             ("j/k", "move"),
