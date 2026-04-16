@@ -2,6 +2,18 @@
 name = "shellpass"
 version = "0.0.1"
 edition = "2024"
+authors = ["tech0ne"]
+description = "A TUI password manager, encrypted, writen in rust !"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/tech0ne/shellpass"
+homepage = "https://github.com/tech0ne/shellpass"
+
+[package.metadata.wix]
+upgrade-guid = "FAED4502-9AB9-4482-8E05-ECE9B5BFE5CE"
+path-guid = "533446F0-046C-4E2A-8B7F-7ACC5F78838A"
+license = false
+eula = false
 
 [dependencies]
 # data handling
@@ -31,3 +43,8 @@ dirs = "6.0.0"
 
 # macros
 paste = "1.0.15"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
