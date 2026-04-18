@@ -12,10 +12,7 @@ on:
       - completed
 
 jobs:
-  build-pages:
-    needs:
-      - announce
-    if: ${{ always() && needs.announce.result == 'success' }}
+  build:
     runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout
@@ -36,15 +33,13 @@ jobs:
           path: ./public
 
   deploy:
-    needs:
-      - build-pages
-    if: ${{ always() && needs.deploy.result == 'success' }}
-    runs-on: "ubuntu:22.04"
+    needs: build
 
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
+    runs-on: "ubuntu:22.04"
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
