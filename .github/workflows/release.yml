@@ -15,9 +15,7 @@
 
 name: Release
 permissions:
-  contents: write
-  id-token: write
-  pages: write
+  "contents": "write"
 
 # This task will run whenever you push a git tag that looks like a version
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
@@ -296,40 +294,3 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
-
-  build-pages:
-    needs:
-      - announce
-    if: ${{ always() && needs.announce.result == 'success' }}
-    runs-on: "ubuntu-22.04"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install oranda
-        shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://axodotdev.artifacts.axodotdev.host/oranda/v0.6.5/oranda-installer.sh | sh"
-
-      - name: Build site
-        run: |
-          source HOME/.cargo/env
-          oranda build
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: ./public
-  deploy:
-    needs:
-      - build-pages
-    if: ${{ always() && needs.deploy.result == 'success' }}
-    runs-on: "ubuntu:22.04"
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
