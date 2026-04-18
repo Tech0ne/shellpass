@@ -1,5 +1,10 @@
 {
+    "build": {
+        "path_prefix": "shellpass"
+    },
     "styles": {
-        "theme": "hacker"
+        "theme": "hacker",
+        "logo": "./img/logo.png",
+        "favicon": "./img/favicon.ico"
     }
 }
