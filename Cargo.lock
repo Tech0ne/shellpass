@@ -1761,7 +1761,7 @@ dependencies = [
 
 [[package]]
 name = "shellpass"
-version = "0.0.8"
+version = "0.0.9"
 dependencies = [
  "aes-gcm",
  "arboard",
