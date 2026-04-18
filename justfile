@@ -30,8 +30,8 @@ build-windows mode="debug":
 
 [doc("Build and run the project")]
 [group("run")]
-run: build
-    cargo run
+run *args: build
+    cargo run -- {{ args }}
 
 [doc("Remove build directory")]
 [group("clean")]
