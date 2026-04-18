@@ -1,9 +1,6 @@
 {
     "build": {
-        "path_prefix": "shellpass",
-        "additional_pages": {
-          "Install": "./INSTALL.md"
-        }
+        "path_prefix": "shellpass"
     },
     "styles": {
         "theme": "hacker",
