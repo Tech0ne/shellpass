@@ -10,7 +10,7 @@ use crate::{
     app::App,
     ui::{
         style::{ACCENT, ACCENT2, BG, BG_PANEL, DIM, MUTED, TEXT, panel_focused},
-        utils::centered_rect,
+        utils::{centered_rect, popup_hint_rects},
     },
 };
 
@@ -123,5 +123,9 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect, profile_index: Optio
             .alignment(Alignment::Center),
             chunks[i],
         );
+        app.layout.footer_hints =
+            popup_hint_rects(&[("Enter", "confirm"), ("Esc", "cancel")], chunks[i]);
+    } else {
+        app.layout.footer_hints = vec![];
     }
 }

@@ -159,3 +159,21 @@ pub fn clicked_hint(mouse_col: u16, mouse_row: u16, hint_rects: &[Rect]) -> Opti
             && mouse_row >= r.y && mouse_row < r.y + r.height
     })
 }
+
+pub fn popup_hint_rects(hints: &[(&str, &str)], area: Rect) -> Vec<Rect> {
+    let total_w: u16 = hints.iter().map(|(k, d)| {
+        (k.chars().count() + 2 + d.chars().count() + 3) as u16
+    }).sum();
+
+    let start_x = area.x + area.width.saturating_sub(total_w) / 2;
+    let y = area.y;
+
+    let mut x = start_x;
+    hints.iter().map(|(k, d)| {
+        let badge_w = (k.chars().count() + 2) as u16;
+        let desc_w  = (d.chars().count() + 3) as u16;
+        let r = Rect::new(x, y, badge_w, 1);
+        x += badge_w + desc_w;
+        r
+    }).collect()
+}

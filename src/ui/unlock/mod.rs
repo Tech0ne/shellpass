@@ -10,7 +10,7 @@ use crate::{
     app::App,
     ui::{
         style::{ACCENT, BG, BG_PANEL, DIM, MUTED, TEXT, panel_focused},
-        utils::centered_rect,
+        utils::{centered_rect, popup_hint_rects},
     },
 };
 
@@ -139,6 +139,14 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
                 Span::styled(" quit ", Style::default().fg(MUTED)),
             ]))
             .alignment(Alignment::Center),
+            chunks[i],
+        );
+        app.layout.footer_hints = popup_hint_rects(
+            &[
+                ("Enter", " confirm "),
+                ("Tab", "show/hide "),
+                ("^C", "quit "),
+            ],
             chunks[i],
         );
     }
