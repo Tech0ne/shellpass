@@ -1,5 +1,9 @@
 name: Build pages
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   id-token: write
@@ -34,12 +38,12 @@ jobs:
 
   deploy:
     needs: build
+    runs-on: "ubuntu:22.04"
 
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    runs-on: "ubuntu:22.04"
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

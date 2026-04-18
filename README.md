@@ -1,5 +1,7 @@
 # shellpass
 
+[![Release](https://github.com/Tech0ne/shellpass/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/Tech0ne/shellpass/actions/workflows/release.yml)
+
 A terminal-based password manager written in Rust.
 
 ## Features
