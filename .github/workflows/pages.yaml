@@ -24,7 +24,7 @@ jobs:
 
       - name: Build site
         run: |
-          source HOME/.cargo/env
+          source $HOME/.cargo/env
           oranda build
 
       - name: Upload artifact
